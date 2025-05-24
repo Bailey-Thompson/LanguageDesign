@@ -35,7 +35,7 @@ class Interpreter(object):
         # self.pos is an index into self.text
         self.pos = 0
         # current token instance
-        self.current_token = None
+        self.current_token = self.get_next_token()
 
     def error(self):
         raise Exception('Error parsing input')
@@ -47,6 +47,9 @@ class Interpreter(object):
         apart into tokens. One token at a time.
         """
         text = self.text
+
+        while self.pos < len(text) and text[self.pos].isspace():
+            self.pos += 1  # skip whitespace
 
         # is self.pos index past the end of the self.text ?
         # if so, then return EOF token because there is no more
@@ -62,11 +65,6 @@ class Interpreter(object):
         # integer, create an INTEGER token, increment self.pos
         # index to point to the next character after the digit,
         # and return the INTEGER token
-        if current_char.isdigit():
-            token = Token(INTEGER, int(current_char))
-            self.pos += 1
-            return token
-        
         if current_char.isdigit():
             return self.number()
 
@@ -130,30 +128,49 @@ class Interpreter(object):
         else:
             self.error()
 
+    def factor(self):
+        """factor : INTEGER | LPAREN expr RPAREN"""
+        token = self.current_token
+        if token.type == INTEGER:
+            self.eat(INTEGER)
+            return token.value
+        elif token.type == LPAREN:
+            self.eat(LPAREN)
+            result = self.expr()
+            self.eat(RPAREN)
+            return result
+        else:
+            self.error()
+
+    def term(self):
+        """term : factor ((MUL | DIV) factor)*"""
+        result = self.factor()
+
+        while self.current_token.type in (MUL, DIV):
+            token = self.current_token
+            if token.type == MUL:
+                self.eat(MUL)
+                result *= self.factor()
+            elif token.type == DIV:
+                self.eat(DIV)
+                divisor = self.factor()
+                if divisor == 0:
+                    raise Exception('Division by zero')
+                result /= divisor
+        return result
+
     def expr(self):
-        """expr -> INTEGER PLUS INTEGER"""
-        # set current token to the first token taken from the input
-        self.current_token = self.get_next_token()
+        """expr : term ((PLUS | MINUS) term)*"""
+        result = self.term()
 
-        # we expect the current token to be a single-digit integer
-        left = self.current_token
-        self.eat(INTEGER)
-
-        # we expect the current token to be a '+' token
-        op = self.current_token
-        self.eat(PLUS)
-
-        # we expect the current token to be a single-digit integer
-        right = self.current_token
-        self.eat(INTEGER)
-        # after the above call the self.current_token is set to
-        # EOF token
-
-        # at this point INTEGER PLUS INTEGER sequence of tokens
-        # has been successfully found and the method can just
-        # return the result of adding two integers, thus
-        # effectively interpreting client input
-        result = left.value + right.value
+        while self.current_token.type in (PLUS, MINUS):
+            token = self.current_token
+            if token.type == PLUS:
+                self.eat(PLUS)
+                result += self.term()
+            elif token.type == MINUS:
+                self.eat(MINUS)
+                result -= self.term()
         return result
 
 
