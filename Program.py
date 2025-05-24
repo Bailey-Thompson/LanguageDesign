@@ -35,7 +35,7 @@ class Token(object):
 
 
 class Interpreter(object):
-    def __init__(self, text):
+    def __init__(self, text, global_vars):
         # client string input, e.g. "3+5"
         self.text = text
         # self.pos is an index into self.text
@@ -228,7 +228,7 @@ class Interpreter(object):
             return token.value
         
         if token.type == IDENTIFIER:
-            var_name - token.value
+            var_name = token.value
             self.eat(IDENTIFIER)
             if var_name in self.global_vars:
                 return self.global_vars[var_name]
