@@ -180,18 +180,36 @@ class Interpreter(object):
 
 
 def main():
-    while True:
+    import sys
+
+    if len(sys.argv) == 2:
+        file_path = sys.argv[1]
         try:
-            # To run under Python3 replace 'raw_input' call
-            # with 'input'
-            text = input('calc> ')
-        except EOFError:
-            break
-        if not text:
-            continue
-        interpreter = Interpreter(text)
-        result = interpreter.expr()
-        print(result)
+            with open(file_path, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    interpreter = Interpreter(line)
+                    result = interpreter.expr()
+                    print(result)
+        except FileNotFoundError:
+            print(f"File not found: {file_path}")
+
+    else:
+
+        while True:
+            try:
+                # To run under Python3 replace 'raw_input' call
+                # with 'input'
+                text = input('calc> ')
+            except EOFError:
+                break
+            if not text:
+                continue
+            interpreter = Interpreter(text)
+            result = interpreter.expr()
+            print(result)
 
 
 if __name__ == '__main__':
