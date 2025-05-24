@@ -7,6 +7,7 @@ TRUE, FALSE = 'TRUE', 'FALSE'
 AND, OR, NOT = 'AND', 'OR', 'NOT'
 LT, GT, LE, GE = 'LT', 'GT', 'LE', 'GE'
 EQ, NEQ = 'EQ', 'NEQ'
+STRING = 'STRING'
 
 
 class Token(object):
@@ -113,12 +114,6 @@ class Interpreter(object):
         if current_char == '!':
             self.pos += 1
             return Token(NOT, '!')
-        if current_char == '(':
-            self.pos += 1
-            return Token(LPAREN, '(')
-        if current_char == ')':
-            self.pos += 1
-            return Token(RPAREN, ')')
 
         # Keywords and identifiers (for true, false, and, or)
         if current_char.isalpha():
@@ -139,6 +134,17 @@ class Interpreter(object):
                 return Token(NOT, 'not')
             else:
                 self.error()
+
+        if current_char == '"':
+            self.pos += 1
+            start_pos = self.pos
+            while self.pos < len(text) and text[self.pos] != '"':
+                self.pos += 1
+            if self.pos >= len(text):
+                self.error()
+            value = text[start_pos:self.pos]
+            self.pos += 1
+            return Token(STRING, value)
 
     def number(self):
         result = ''
@@ -194,6 +200,10 @@ class Interpreter(object):
             result = self.logical_or()
             self.eat(RPAREN)
             return result
+        
+        if token.type == STRING:
+            self.eat(STRING)
+            return token.value
 
         self.error()
 
@@ -222,10 +232,21 @@ class Interpreter(object):
             token = self.current_token
             if token.type == PLUS:
                 self.eat(PLUS)
-                result += self.term()
+                right = self.term()
+
+                if isinstance(result, str) and isinstance(right, str):
+                    result = result+right
+                elif isinstance(result, (int, float)) and isinstance(right, (int, float)):
+                    result = result + right
+                else:
+                    raise Exception(f"Type error: cannot add {type(result).__name__} and {type(right).__name__}")
             elif token.type == MINUS:
                 self.eat(MINUS)
-                result -= self.term()
+                right= self.term()
+                if isinstance(result, (int, float)) and isinstance(right, (int, float)):
+                    result = result - right
+                else:
+                    raise Exception(f"Type error: cannot subtract {type(result).__name__} and {type(right).__name__}")
         return result
     
     def logical_or(self):
