@@ -2,7 +2,7 @@
 #
 # EOF (end-of-file) token is used to indicate that
 # there is no more input left for lexical analysis
-INTEGER, PLUS, EOF, MUL, DIV, LPAREN, RPAREN = 'INTEGER', 'PLUS', 'EOF', 'MUL', 'DIV', 'LPAREN', 'RPAREN'
+INTEGER, PLUS, EOF, MINUS, MUL, DIV, LPAREN, RPAREN = 'INTEGER', 'PLUS', 'EOF', 'MINUS', 'MUL', 'DIV', 'LPAREN', 'RPAREN'
 
 
 class Token(object):
@@ -66,13 +66,59 @@ class Interpreter(object):
             token = Token(INTEGER, int(current_char))
             self.pos += 1
             return token
+        
+        if current_char.isdigit():
+            return self.number()
 
         if current_char == '+':
             token = Token(PLUS, current_char)
             self.pos += 1
             return token
+        
+        if current_char == '-':
+            token = Token(MINUS, current_char)
+            self.pos += 1
+            return Token(MINUS, '-')
+        
+        if current_char == '*':
+            token = Token(MUL, current_char)
+            self.pos += 1
+            return Token(MUL, '*')
+        
+        if current_char == '/':
+            token = Token(DIV, current_char)
+            self.pos += 1
+            return Token(DIV, '/')
+        
+        if current_char == '(':
+            token = Token(LPAREN, current_char)
+            self.pos += 1
+            return Token(LPAREN, '(')
+        
+        if current_char == ')':
+            token = Token(RPAREN, current_char)
+            self.pos += 1
+            return Token(RPAREN, ')')
 
         self.error()
+
+    def number(self):
+        result = ''
+        dot_count = 0
+
+        while self.pos < len(self.text) and (self.text[self.pos].isdigit() or self.text[self.pos] == '.'):
+            if self.text[self.pos] == '.':
+                dot_count += 1
+                if dot_count > 1:
+                    self.error()
+            result += self.text[self.pos]
+            self.pos += 1
+
+        if dot_count == 0:
+            return Token(INTEGER, int(result))
+        else:
+            return Token(INTEGER, float(result))
+
 
     def eat(self, token_type):
         # compare the current token type with the passed token
