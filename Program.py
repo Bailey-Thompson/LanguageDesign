@@ -129,8 +129,13 @@ class Interpreter(object):
             self.error()
 
     def factor(self):
-        """factor : INTEGER | LPAREN expr RPAREN"""
+        """factor : (MINUS)? (INTEGER | LPAREN expr RPAREN)"""
         token = self.current_token
+
+        if token.type == MINUS:
+            self.eat(MINUS)
+            return -self.factor()
+
         if token.type == INTEGER:
             self.eat(INTEGER)
             return token.value
