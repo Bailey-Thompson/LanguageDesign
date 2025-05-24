@@ -8,6 +8,7 @@ AND, OR, NOT = 'AND', 'OR', 'NOT'
 LT, GT, LE, GE = 'LT', 'GT', 'LE', 'GE'
 EQ, NEQ = 'EQ', 'NEQ'
 STRING = 'STRING'
+IDENTIFIER, ASSIGN = 'IDENTIFIER', 'ASSIGN'
 
 
 class Token(object):
@@ -41,6 +42,8 @@ class Interpreter(object):
         self.pos = 0
         # current token instance
         self.current_token = self.get_next_token()
+
+        self.global_vars = globals if globals is not None else {}
 
     def error(self):
         raise Exception('Error parsing input')
@@ -89,6 +92,10 @@ class Interpreter(object):
             self.pos += 1
             return Token(RPAREN, ')')
         
+        if current_char == '=':
+            self.pos += 1
+            return Token(ASSIGN, '=')
+        
         if self.pos + 1 < len(text):
             two_char = text[self.pos:self.pos+2]
             if two_char == '==':
@@ -118,7 +125,7 @@ class Interpreter(object):
         # Keywords and identifiers (for true, false, and, or)
         if current_char.isalpha():
             start_pos = self.pos
-            while self.pos < len(text) and text[self.pos].isalpha():
+            while self.pos < len(text) and (text[self.pos].isalnum() or text[self.pos] == '_'):
                 self.pos += 1
             word = text[start_pos:self.pos].lower()
             print(f"Found word token: '{word}'")
@@ -133,7 +140,7 @@ class Interpreter(object):
             elif word == 'not':
                 return Token(NOT, 'not')
             else:
-                self.error()
+                return Token(IDENTIFIER, word)
 
         if current_char == '"':
             self.pos += 1
@@ -219,6 +226,14 @@ class Interpreter(object):
         if token.type == STRING:
             self.eat(STRING)
             return token.value
+        
+        if token.type == IDENTIFIER:
+            var_name - token.value
+            self.eat(IDENTIFIER)
+            if var_name in self.global_vars:
+                return self.global_vars[var_name]
+            else:
+                raise Exception(f"Undefined variable '{var_name}")
 
         self.error()
 
@@ -307,10 +322,29 @@ class Interpreter(object):
                 self.eat(GE)
                 result = (result >= self.term())
         return result
+    
+    def statement(self):
+        if self.current_token.type == IDENTIFIER:
+            var_name = self.current_token.value
+            saved_pos = self.pos
+            saved_token = self.current_token
+
+            self.eat(IDENTIFIER)
+            if self.current_token.type == ASSIGN:
+                self.eat(ASSIGN)
+                expr_val = self.logical_or()
+                self.global_vars[var_name] = expr_val
+                return expr_val
+            else:
+                self.pos = saved_pos
+                self.current_token = saved_token
+
+        return self.logical_or()
 
 
 def main():
     import sys
+    global_vars = {}
 
     if len(sys.argv) == 2:
         file_path = sys.argv[1]
@@ -320,8 +354,8 @@ def main():
                     line = line.strip()
                     if not line:
                         continue
-                    interpreter = Interpreter(line)
-                    result = interpreter.logical_or()
+                    interpreter = Interpreter(line, global_vars)
+                    result = interpreter.statement()
                     print(result)
         except FileNotFoundError:
             print(f"File not found: {file_path}")
@@ -337,8 +371,8 @@ def main():
                 break
             if not text:
                 continue
-            interpreter = Interpreter(text)
-            result = interpreter.logical_or()
+            interpreter = Interpreter(text, global_vars)
+            result = interpreter.statement()
             print(result)
 
 
