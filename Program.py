@@ -137,14 +137,29 @@ class Interpreter(object):
 
         if current_char == '"':
             self.pos += 1
-            start_pos = self.pos
+            result = ''
             while self.pos < len(text) and text[self.pos] != '"':
+                if text[self.pos] == '\\':
+                    self.pos += 1
+                    if self.pos < len(text):
+                        esc_char = text[self.pos]
+                        if esc_char == 'n':
+                            result += '\n'
+                        if esc_char == 't':
+                            result += '\t'
+                        elif esc_char == 'e':
+                            print("Exiting program.")
+                            exit(0)
+                        else:
+                            result += esc_char
+                else:
+                    result += text[self.pos]
                 self.pos += 1
+
             if self.pos >= len(text):
                 self.error()
-            value = text[start_pos:self.pos]
             self.pos += 1
-            return Token(STRING, value)
+            return Token(STRING, result)
 
     def number(self):
         result = ''
