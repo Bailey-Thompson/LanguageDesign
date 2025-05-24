@@ -3,6 +3,10 @@
 # EOF (end-of-file) token is used to indicate that
 # there is no more input left for lexical analysis
 INTEGER, PLUS, EOF, MINUS, MUL, DIV, LPAREN, RPAREN = 'INTEGER', 'PLUS', 'EOF', 'MINUS', 'MUL', 'DIV', 'LPAREN', 'RPAREN'
+TRUE, FALSE = 'TRUE', 'FALSE'
+AND, OR, NOT = 'AND', 'OR', 'NOT'
+LT, GT, LE, GE = 'LT', 'GT', 'LE', 'GE'
+EQ, NEQ = 'EQ', 'NEQ'
 
 
 class Token(object):
@@ -41,30 +45,16 @@ class Interpreter(object):
         raise Exception('Error parsing input')
 
     def get_next_token(self):
-        """Lexical analyzer (also known as scanner or tokenizer)
-
-        This method is responsible for breaking a sentence
-        apart into tokens. One token at a time.
-        """
         text = self.text
 
         while self.pos < len(text) and text[self.pos].isspace():
             self.pos += 1  # skip whitespace
 
-        # is self.pos index past the end of the self.text ?
-        # if so, then return EOF token because there is no more
-        # input left to convert into tokens
         if self.pos > len(text) - 1:
             return Token(EOF, None)
 
-        # get a character at the position self.pos and decide
-        # what token to create based on the single character
         current_char = text[self.pos]
 
-        # if the character is a digit then convert it to
-        # integer, create an INTEGER token, increment self.pos
-        # index to point to the next character after the digit,
-        # and return the INTEGER token
         if current_char.isdigit():
             return self.number()
 
@@ -97,8 +87,58 @@ class Interpreter(object):
             token = Token(RPAREN, current_char)
             self.pos += 1
             return Token(RPAREN, ')')
+        
+        if self.pos + 1 < len(text):
+            two_char = text[self.pos:self.pos+2]
+            if two_char == '==':
+                self.pos += 2
+                return Token(EQ, '==')
+            elif two_char == '!=':
+                self.pos += 2
+                return Token(NEQ, '!=')
+            elif two_char == '<=':
+                self.pos += 2
+                return Token(LE, '<=')
+            elif two_char == '>=':
+                self.pos += 2
+                return Token(GE, '>=')
 
-        self.error()
+        # Single character tokens
+        if current_char == '<':
+            self.pos += 1
+            return Token(LT, '<')
+        if current_char == '>':
+            self.pos += 1
+            return Token(GT, '>')
+        if current_char == '!':
+            self.pos += 1
+            return Token(NOT, '!')
+        if current_char == '(':
+            self.pos += 1
+            return Token(LPAREN, '(')
+        if current_char == ')':
+            self.pos += 1
+            return Token(RPAREN, ')')
+
+        # Keywords and identifiers (for true, false, and, or)
+        if current_char.isalpha():
+            start_pos = self.pos
+            while self.pos < len(text) and text[self.pos].isalpha():
+                self.pos += 1
+            word = text[start_pos:self.pos].lower()
+            print(f"Found word token: '{word}'")
+            if word == 'true':
+                return Token(TRUE, True)
+            elif word == 'false':
+                return Token(FALSE, False)
+            elif word == 'and':
+                return Token(AND, 'and')
+            elif word == 'or':
+                return Token(OR, 'or')
+            elif word == 'not':
+                return Token(NOT, 'not')
+            else:
+                self.error()
 
     def number(self):
         result = ''
@@ -119,18 +159,19 @@ class Interpreter(object):
 
 
     def eat(self, token_type):
-        # compare the current token type with the passed token
-        # type and if they match then "eat" the current token
-        # and assign the next token to the self.current_token,
-        # otherwise raise an exception.
         if self.current_token.type == token_type:
+            print(f"Eating token: {self.current_token}")
             self.current_token = self.get_next_token()
         else:
             self.error()
 
+
     def factor(self):
-        """factor : (MINUS)? (INTEGER | LPAREN expr RPAREN)"""
         token = self.current_token
+
+        if token.type == NOT:
+            self.eat(NOT)
+            return not self.factor()
 
         if token.type == MINUS:
             self.eat(MINUS)
@@ -139,13 +180,22 @@ class Interpreter(object):
         if token.type == INTEGER:
             self.eat(INTEGER)
             return token.value
+        
+        if token.type == TRUE:
+            self.eat(TRUE)
+            return True
+        
+        if token.type == FALSE:
+            self.eat(FALSE)
+            return False
+
         elif token.type == LPAREN:
             self.eat(LPAREN)
-            result = self.expr()
+            result = self.logical_or()
             self.eat(RPAREN)
             return result
-        else:
-            self.error()
+
+        self.error()
 
     def term(self):
         """term : factor ((MUL | DIV) factor)*"""
@@ -177,6 +227,50 @@ class Interpreter(object):
                 self.eat(MINUS)
                 result -= self.term()
         return result
+    
+    def logical_or(self):
+        result = self.logical_and()
+        while self.current_token.type == OR:
+            self.eat(OR)
+            result = result or self.logical_and()
+        return result
+    
+    def logical_and(self):
+        result = self.equality()
+        while self.current_token.type == AND:
+            self.eat(AND)
+            result = result and self.equality()
+        return result
+    
+    def equality(self):
+        result = self.comparison()
+        while self.current_token.type in (EQ, NEQ):
+            token = self.current_token
+            if token.type == EQ:
+                self.eat(EQ)
+                result = (result == self.comparison())
+            elif token.type == NEQ:
+                self.eat(NEQ)
+                result = (result != self.comparison())
+        return result
+    
+    def comparison(self):
+        result = self.expr()
+        while self.current_token.type in (LT, GT, LE, GE):
+            token = self.current_token
+            if token.type == LT:
+                self.eat(LT)
+                result = (result < self.term())
+            elif token.type == LE:
+                self.eat(LE)
+                result = (result <= self.term())
+            elif token.type == GT:
+                self.eat(GT)
+                result = (result > self.term())
+            elif token.type == GE:
+                self.eat(GE)
+                result = (result >= self.term())
+        return result
 
 
 def main():
@@ -191,7 +285,7 @@ def main():
                     if not line:
                         continue
                     interpreter = Interpreter(line)
-                    result = interpreter.expr()
+                    result = interpreter.logical_or()
                     print(result)
         except FileNotFoundError:
             print(f"File not found: {file_path}")
@@ -208,7 +302,7 @@ def main():
             if not text:
                 continue
             interpreter = Interpreter(text)
-            result = interpreter.expr()
+            result = interpreter.logical_or()
             print(result)
 
 
