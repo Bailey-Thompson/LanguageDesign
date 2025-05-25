@@ -43,7 +43,7 @@ class Interpreter(object):
         # current token instance
         self.current_token = self.get_next_token()
 
-        self.global_vars = globals if globals is not None else {}
+        self.global_vars = global_vars if global_vars is not None else {}
 
     def error(self):
         raise Exception('Error parsing input')
@@ -324,6 +324,12 @@ class Interpreter(object):
         return result
     
     def statement(self):
+        if self.current_token.type == IDENTIFIER and self.current_token.value == "print":
+            self.eat(IDENTIFIER)
+            expr_val = self.logical_or()
+            print(expr_val)
+            return expr_val
+
         if self.current_token.type == IDENTIFIER:
             var_name = self.current_token.value
             saved_pos = self.pos
