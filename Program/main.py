@@ -15,7 +15,8 @@ def main():
                         continue
                     interpreter = Interpreter(line, global_vars)
                     result = interpreter.statement()
-                    print(result)
+                    if result is not None:
+                        print(result)
         except FileNotFoundError:
             print(f"File not found: {file_path}")
 
@@ -29,7 +30,8 @@ def main():
                 continue
             interpreter = Interpreter(text, global_vars)
             result = interpreter.statement()
-            print(result)
-
+            if result is not None:
+                        print(result)
+                        
 if __name__ == '__main__':
     main()

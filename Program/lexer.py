@@ -2,7 +2,7 @@
 from tokens import (
     Token, INTEGER, PLUS, EOF, MINUS, MUL, DIV, LPAREN, RPAREN,
     TRUE, FALSE, AND, OR, NOT, LT, GT, LE, GE, EQ, NEQ,
-    STRING, IDENTIFIER, ASSIGN
+    STRING, IDENTIFIER, ASSIGN, DEL
 )
 
 class Lexer(object):
@@ -127,6 +127,8 @@ class Lexer(object):
                     return Token(OR, 'or')
                 elif word == 'not':
                     return Token(NOT, 'not')
+                elif word == "del":
+                    return Token(DEL, 'del')
                 else:
                     return Token(IDENTIFIER, word)
 

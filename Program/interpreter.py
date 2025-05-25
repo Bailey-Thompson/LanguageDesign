@@ -3,7 +3,7 @@ from lexer import Lexer
 from tokens import (
     Token, INTEGER, PLUS, EOF, MINUS, MUL, DIV, LPAREN, RPAREN,
     TRUE, FALSE, AND, OR, NOT, LT, GT, LE, GE, EQ, NEQ,
-    STRING, IDENTIFIER, ASSIGN
+    STRING, IDENTIFIER, ASSIGN, DEL
 )
 
 class Interpreter(object):
@@ -17,7 +17,6 @@ class Interpreter(object):
 
     def eat(self, token_type):
         if self.current_token.type == token_type:
-            # print(f"Eating token: {self.current_token}")
             self.current_token = self.lexer.get_next_token()
         else:
             self.error()
@@ -57,6 +56,10 @@ class Interpreter(object):
         if token.type == STRING:
             self.eat(STRING)
             return token.value
+        
+        if token.type == DEL:
+            self.eat(DEL)
+            return 'DEL'
 
         if token.type == IDENTIFIER:
             var_name = token.value
@@ -154,7 +157,7 @@ class Interpreter(object):
             self.eat(IDENTIFIER)
             expr_val = self.logical_or()
             print(expr_val)
-            return expr_val
+            return None
 
         if self.current_token.type == IDENTIFIER:
             var_name = self.current_token.value
@@ -165,8 +168,13 @@ class Interpreter(object):
             if self.current_token.type == ASSIGN:
                 self.eat(ASSIGN)
                 expr_val = self.logical_or()
-                self.global_vars[var_name] = expr_val
-                return expr_val
+                if expr_val == 'DEL':
+                    if var_name in self.global_vars:
+                        del self.global_vars[var_name]
+                        return None
+                else:
+                    self.global_vars[var_name] = expr_val
+                    return expr_val
             else:
                 self.lexer.pos = saved_pos
                 self.current_token = saved_token

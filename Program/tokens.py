@@ -9,6 +9,7 @@ LT, GT, LE, GE = 'LT', 'GT', 'LE', 'GE'
 EQ, NEQ = 'EQ', 'NEQ'
 STRING = 'STRING'
 IDENTIFIER, ASSIGN = 'IDENTIFIER', 'ASSIGN'
+DEL = 'DEL'
 
 class Token(object):
     def __init__(self, type, value):
