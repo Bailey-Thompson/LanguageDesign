@@ -49,6 +49,19 @@ class Parser:
         elif token.type == DEL:
             self.eat(DEL)
             return Var("DEL")
+        elif token.type == INPUT:
+            self.eat(INPUT)
+            if self.current_token.type == LPAREN:
+                self.eat(LPAREN)
+                if self.current_token.type == STRING:
+                    prompt = self.current_token.value
+                    self.eat(STRING)
+                else:
+                    prompt = None
+                self.eat(RPAREN)
+                return Input(prompt)
+            else:
+                return Input(None)
         else:
             self.error()
 
@@ -107,11 +120,15 @@ class Parser:
         if self.current_token.type == IF:
             self.eat(IF)
             cond = self.expr()
-            print("Condition parsed. Current token before THEN:", self.current_token)
             self.eat(THEN)
             then_expr = self.statement() if self.current_token.type != LBRACE else self.block()
-            self.eat(ELSE)
-            else_expr = self.statement() if self.current_token.type != LBRACE else self.block()
+
+            if self.current_token.type == ELSE:
+                self.eat(ELSE)
+                else_expr = self.statement() if self.current_token.type != LBRACE else self.block()
+            else:
+                else_expr = None
+
             return If(cond, then_expr, else_expr)
 
         elif self.current_token.type == WHILE:

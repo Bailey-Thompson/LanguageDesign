@@ -46,7 +46,7 @@ class Print(AST):
         self.expr = expr
 
 class Input(AST):
-    def __init__(self, var_name):
+    def __init__(self, var_name=None):
         self.var_name = var_name
 
 class If(AST):

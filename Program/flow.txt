@@ -1,7 +1,30 @@
-x = 10
+x = 0
+y = 10
 
-if (x == 10) then {
-    y = 5
+while (x < 10) {
+  while (y > 0) {
+    y = y - 1
+    print(y)
+  }
+  print(x)
+  x = x + 1
 }
 
+x = 1
+
+if (x == 0) then
+  y = 1
+else
+  y = 6
+
 print(y)
+
+if (x > 0) then
+  if (y < 5) then
+    z = 10
+  else
+    z = 20
+else
+  z = 30
+
+print(z)
