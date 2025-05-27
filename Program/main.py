@@ -1,37 +1,34 @@
-# main.py
+from parser import Parser
 from interpreter import Interpreter
+import sys
+
+def run(text, interpreter):
+    parser = Parser(text)
+    ast = parser.program()  # parse all statements
+    return interpreter.visit(ast)
 
 def main():
-    import sys
     global_vars = {}
+    interpreter = Interpreter(global_vars)
 
     if len(sys.argv) == 2:
         file_path = sys.argv[1]
-        try:
-            with open(file_path, 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    interpreter = Interpreter(line, global_vars)
-                    result = interpreter.statement()
-                    if result is not None:
-                        print(result)
-        except FileNotFoundError:
-            print(f"File not found: {file_path}")
-
+        with open(file_path, 'r') as f:
+            text = f.read()  # read whole file at once
+        result = run(text, interpreter)
+        if result is not None:
+            print(result)
     else:
         while True:
             try:
                 text = input('calc> ')
             except EOFError:
                 break
-            if not text:
+            if not text.strip():
                 continue
-            interpreter = Interpreter(text, global_vars)
-            result = interpreter.statement()
+            result = run(text, interpreter)
             if result is not None:
-                        print(result)
-                        
+                print(result)
+
 if __name__ == '__main__':
     main()

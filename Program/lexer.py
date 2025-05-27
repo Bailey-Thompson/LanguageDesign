@@ -2,13 +2,17 @@
 from tokens import (
     Token, INTEGER, PLUS, EOF, MINUS, MUL, DIV, LPAREN, RPAREN,
     TRUE, FALSE, AND, OR, NOT, LT, GT, LE, GE, EQ, NEQ,
-    STRING, IDENTIFIER, ASSIGN, DEL
+    STRING, IDENTIFIER, ASSIGN, DEL, IF, THEN, ELSE, WHILE, INPUT,
+    LBRACE, RBRACE
 )
 
 class Lexer(object):
     def __init__(self, text):
         self.text = text
         self.pos = 0
+
+    def reset(self, pos):
+        self.pos = pos
 
     def error(self):
         raise Exception('Invalid character')
@@ -110,6 +114,14 @@ class Lexer(object):
                 else:
                     self.advance()
                     return Token(GT, '>')
+                
+            if current_char == '{':
+                self.advance()
+                return Token(LBRACE, '{')
+            
+            if current_char == '}':
+                self.advance()
+                return Token(RBRACE, '}')
 
             if current_char.isalpha():
                 start_pos = self.pos
@@ -127,6 +139,16 @@ class Lexer(object):
                     return Token(OR, 'or')
                 elif word == 'not':
                     return Token(NOT, 'not')
+                elif word == 'if':
+                    return Token(IF, 'if')
+                elif word == 'then':
+                    return Token(THEN, 'then')
+                elif word == 'else':
+                    return Token(ELSE, 'else')
+                elif word == 'while':
+                    return Token(WHILE, 'while')
+                elif word == 'input':
+                    return Token(INPUT, 'input')
                 elif word == "del":
                     return Token(DEL, 'del')
                 else:

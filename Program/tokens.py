@@ -10,6 +10,8 @@ EQ, NEQ = 'EQ', 'NEQ'
 STRING = 'STRING'
 IDENTIFIER, ASSIGN = 'IDENTIFIER', 'ASSIGN'
 DEL = 'DEL'
+IF, THEN, ELSE, WHILE, INPUT = 'IF', 'THEN', 'ELSE', 'WHILE', 'INPUT'
+LBRACE, RBRACE = 'LBRACE', 'RBRACE'
 
 class Token(object):
     def __init__(self, type, value):
