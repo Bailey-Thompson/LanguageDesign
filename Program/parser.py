@@ -1,22 +1,29 @@
+# # Imports statements
 from tokens import *
 from lexer import Lexer
 from ast_nodes import *
 
 class Parser:
     def __init__(self, text):
+        # Initialise parser with text, creates lexer intance
         self.lexer = Lexer(text)
+        # Assigns current token to the next token
         self.current_token = self.lexer.get_next_token()
 
     def error(self):
+        # Syntax error exception
         raise Exception(f"Syntax error at token {self.current_token}")
 
     def eat(self, token_type):
+        # Consume current token
         if self.current_token.type == token_type:
+            # Move to next token
             self.current_token = self.lexer.get_next_token()
         else:
             self.error()
 
     def factor(self):
+        # Parse factor
         token = self.current_token
 
         if token.type == NOT:
@@ -66,6 +73,7 @@ class Parser:
             self.error()
 
     def term(self):
+        # Parse term
         node = self.factor()
         while self.current_token.type in (MUL, DIV):
             op = self.current_token
@@ -74,6 +82,7 @@ class Parser:
         return node
 
     def arith_expr(self):
+        # Parse arithmetic expression
         node = self.term()
         while self.current_token.type in (PLUS, MINUS):
             op = self.current_token
@@ -82,6 +91,7 @@ class Parser:
         return node
 
     def comparison(self):
+        # Parse comparison expressions
         node = self.arith_expr()
         while self.current_token.type in (LT, LE, GT, GE):
             op = self.current_token
@@ -90,6 +100,7 @@ class Parser:
         return node
 
     def equality(self):
+        # Parse equality expressions
         node = self.comparison()
         while self.current_token.type in (EQ, NEQ):
             op = self.current_token
@@ -98,6 +109,7 @@ class Parser:
         return node
 
     def logical_and(self):
+        # Parse logical and expressions
         node = self.equality()
         while self.current_token.type == AND:
             op = self.current_token
@@ -106,6 +118,7 @@ class Parser:
         return node
 
     def logical_or(self):
+        # Parse logical or expressions
         node = self.logical_and()
         while self.current_token.type == OR:
             op = self.current_token
@@ -117,6 +130,7 @@ class Parser:
         return self.logical_or()
 
     def statement(self):
+        # Parse a statement
         if self.current_token.type == IF:
             self.eat(IF)
             cond = self.expr()
@@ -142,16 +156,20 @@ class Parser:
             self.eat(IDENTIFIER)
 
             if self.current_token.type == ASSIGN:
+                # Assignment statement
                 self.eat(ASSIGN)
                 expr = self.expr()
+                # Special instance for deleting variables
                 if isinstance(expr, Var) and expr.name == "DEL":
                     return Delete(name)
                 return Assign(name, expr)
 
             elif name == "print":
+                # Print statements
                 return Print(self.expr())
 
             elif name == "input":
+                # Input statements
                 return Input(name)
 
             return Var(name)
@@ -160,6 +178,7 @@ class Parser:
             return self.expr()
         
     def block(self):
+        # Parse block of statements
         statements = []
         self.eat(LBRACE)
         while self.current_token.type != RBRACE:
@@ -168,6 +187,7 @@ class Parser:
         return Block(statements)
     
     def program(self):
+        # Parse program as sequence
         statements = []
         while self.current_token.type != EOF:
             statements.append(self.statement())

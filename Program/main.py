@@ -2,33 +2,36 @@ from parser import Parser
 from interpreter import Interpreter
 import sys
 
+# Runs the program
 def run(text, interpreter):
-    parser = Parser(text)
-    ast = parser.program()  # parse all statements
-    return interpreter.visit(ast)
+    parser = Parser(text) # Create a parset instance
+    ast = parser.program()  # parse all statements into an AST
+    return interpreter.visit(ast) #Interpret AST
 
 def main():
-    global_vars = {}
-    interpreter = Interpreter(global_vars)
-
+    global_vars = {} # Dictionary holds variables
+    interpreter = Interpreter(global_vars) # Create interpreter with variable
+    
+    # Checks if file path is provided as a command line argument
     if len(sys.argv) == 2:
-        file_path = sys.argv[1]
+        file_path = sys.argv[1] # Gets fle path
         with open(file_path, 'r') as f:
-            text = f.read()  # read whole file at once
-        result = run(text, interpreter)
+            text = f.read()  # Reads file
+        result = run(text, interpreter) # Parse and run the file
         if result is not None:
-            print(result)
+            print(result) # Print any results
     else:
         while True:
             try:
-                text = input('calc> ')
+                text = input('input> ') # Prompt user for input
             except EOFError:
-                break
+                break # Exit loop on EOF
             if not text.strip():
-                continue
-            result = run(text, interpreter)
+                continue # Ignore empty lines
+            result = run(text, interpreter) # Parse and run user input
             if result is not None:
-                print(result)
+                print(result) # Print any results
 
+# Entry point: run main()
 if __name__ == '__main__':
     main()

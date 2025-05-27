@@ -8,46 +8,58 @@ from tokens import (
 
 class Lexer(object):
     def __init__(self, text):
+        # Initialize the lexer with input source text
         self.text = text
+        # Current position
         self.pos = 0
 
     def reset(self, pos):
+        # Reset position to given value
         self.pos = pos
 
     def error(self):
         raise Exception('Invalid character')
 
     def advance(self):
+        # Move forward one character
         self.pos += 1
 
     def peek(self):
+        # Peek ahead without actually moving
         if self.pos + 1 >= len(self.text):
             return None
         return self.text[self.pos + 1]
 
     def skip_whitespace(self):
+        # Sky over any whitespace
         while self.pos < len(self.text) and self.text[self.pos].isspace():
             self.advance()
 
     def number(self):
+        # Parse a numeric token
         result = ''
+        # Counts decimal points to detect float or integer
         dot_count = 0
         while self.pos < len(self.text) and (self.text[self.pos].isdigit() or self.text[self.pos] == '.'):
             if self.text[self.pos] == '.':
                 dot_count += 1
+                # Can't have more than one decimal
                 if dot_count > 1:
                     self.error()
             result += self.text[self.pos]
             self.advance()
         if dot_count == 0:
+            # No decimal equals integer
             return Token(INTEGER, int(result))
         else:
+            # Decimal equals float
             return Token(INTEGER, float(result))
 
     def get_next_token(self):
         while self.pos < len(self.text):
             current_char = self.text[self.pos]
 
+            # Skips whitespace
             if current_char.isspace():
                 self.skip_whitespace()
                 continue
@@ -123,12 +135,16 @@ class Lexer(object):
                 self.advance()
                 return Token(RBRACE, '}')
 
+            # Detects keywords
             if current_char.isalpha():
                 start_pos = self.pos
                 while (self.pos < len(self.text) and
                        (self.text[self.pos].isalnum() or self.text[self.pos] == '_')):
                     self.advance()
+                # Takes full keyword
                 word = self.text[start_pos:self.pos].lower()
+
+                # Matches against saved keywords
                 if word == 'true':
                     return Token(TRUE, True)
                 elif word == 'false':
@@ -154,9 +170,11 @@ class Lexer(object):
                 else:
                     return Token(IDENTIFIER, word)
 
+            # Detects string by speech marks
             if current_char == '"':
                 self.advance()
                 result = ''
+                # Read characters until end
                 while self.pos < len(self.text) and self.text[self.pos] != '"':
                     if self.text[self.pos] == '\\':
                         self.advance()
@@ -167,6 +185,7 @@ class Lexer(object):
                             elif esc_char == 't':
                                 result += '\t'
                             elif esc_char == 'e':
+                                # Escape key
                                 print("Exiting program.")
                                 exit(0)
                             else:
@@ -182,4 +201,5 @@ class Lexer(object):
 
             self.error()
 
+        # If no more characters, return End of Input
         return Token(EOF, None)
