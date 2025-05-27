@@ -46,6 +46,9 @@ class Parser:
             name = token.value
             self.eat(IDENTIFIER)
             return Var(name)
+        elif token.type == DEL:
+            self.eat(DEL)
+            return Var("DEL")
         else:
             self.error()
 

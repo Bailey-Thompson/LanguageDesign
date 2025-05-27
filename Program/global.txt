@@ -1,0 +1,10 @@
+quickMaths = 9 + 10
+quickMaths = quickMaths + 2
+print quickMaths
+
+floatTest = 1.0
+floatTest = floatTest + 5
+print floatTest
+
+floatTest = del
+print floatTest
